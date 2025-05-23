@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:ui": "rm -rf dist && cd '../OKT2/682 Full Stack Open - osa 2 - Palvelimen kanssa tapahtuva kommunikointi' && npm run build && cp -r build '../dist'",
+    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push"
   },
   "author": "HD",
   "license": "ISC",
