@@ -16,7 +16,7 @@ mongoose.connect(url)
 
 const phoneBookSchema = new mongoose.Schema({
   name: String,
-  number: Boolean,
+  number: String,
 })
 
 const Phonebook = mongoose.model("Person", phoneBookSchema)
@@ -26,7 +26,7 @@ const phonebook = new Phonebook({
     number: number,
 })
 
-if (process.argv.length === 4) {
+if (process.argv.length === 5) {
     phonebook.save().then(result => {
        console.log(`added ${name} number ${number} to phonebook`) 
        mongoose.connection.close()
@@ -37,7 +37,7 @@ if (process.argv.length === 3) {
     Phonebook.find({}).then(result => {
         console.log("phonebook:")
         result.forEach(person => {
-            console.log(name, number)
+            console.log(person.name, person.number)
         })
         mongoose.connection.close()
     })
