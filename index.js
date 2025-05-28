@@ -2,7 +2,7 @@ require("dotenv").config()
 const express = require("express");
 const Phonebook = require("./models/book")
 const morgan = require("morgan");
-const cors = require("cors")
+const cors = require("cors");
 
 const app = express()
 
@@ -71,30 +71,41 @@ app.get("/api/persons/:id", (request, response) => {
 
 app.delete("/api/persons/:id", (request, response) => {
     const id = request.params.id
-    phoneBook = phoneBook.filter(person => person.id !== id)
-    response.status(204).end()
-})
+    Phonebook.findByIdAndDelete(id)
+    .then(() => {
+        response.status(204).end()
+    })
+    .catch(error => {
+        console.error("Error deleting person:", error)
+        response.status(500).json({ error: "Internal Server Error"})
+    });
+});
 
 app.post("/api/persons", (request, response) => {
     const body = request.body;
-    const existingPerson = phoneBook.find(person => person.name === body.name)
 
     if (!body.name || !body.number) {
         return response.status(400).json({ error: "Name and number are required" })
     }
-    if (existingPerson) {
-        return response.status(400).json({ error: "name must be unique" })
-    }
+    Phonebook.findOne({ name: body.name}).then(existingPerson => {
+        if (existingPerson) {
+            return response.status(400).json({ error: "name must be unique" })
+        }
 
-    const id = Math.floor(Math.random() * 100) + 5;
-
-    const newPerson = {
-        id: id.toString(),
-        name: body.name,
-        number: body.number
-    };
-    phoneBook.push(newPerson)
-    response.status(201).json(newPerson);
+        const newPerson = new Phonebook({
+            name: body.name,
+            number: body.number
+        });
+    
+        newPerson.save()
+            .then(savedPerson => {
+                response.status(201).json(savedPerson)
+            })
+            .catch(error => {
+                console.error("Error saving person:", error);
+                response.status(500).json({ error: "Internal Server Error"})
+            })
+    })
 })
 
 app.get("/info", (request, response) => {
