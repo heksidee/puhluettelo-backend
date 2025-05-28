@@ -2,11 +2,11 @@ require("dotenv").config()
 const express = require("express");
 const Phonebook = require("./models/book")
 const morgan = require("morgan");
-
+const cors = require("cors")
 
 const app = express()
 
-
+app.use(cors())
 app.use(express.json());
 
 morgan.token("body", (request) => JSON.stringify(request.body));
