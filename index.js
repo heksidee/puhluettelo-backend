@@ -58,8 +58,7 @@ app.get("/api/persons", (request, response) => {
     
 })
 
-app.get("/api/persons/:id", (request, response) => {
-    /*console.log("searching for id:", request.params.id)
+app.get("/api/persons/:id", (request, response, next) => {
     Phonebook.findById(request.params.id)
         .then(person => {
             if (person) {
@@ -68,30 +67,16 @@ app.get("/api/persons/:id", (request, response) => {
                 response.status(404).end()
             }
         })
-        .catch(error => {
-            console.log(error)
-            response.status(500).end()
-        })*/
-    const id = request.params.id
-    const person = phoneBook.find(person => person.id === id)
-    console.log(person)
-    if (person) {
-        response.json(person)
-    } else {
-        response.status(404).end()
-    }
+        .catch(error => next(error))
 })
 
-app.delete("/api/persons/:id", (request, response) => {
+app.delete("/api/persons/:id", (request, response, next) => {
     const id = request.params.id
     Phonebook.findByIdAndDelete(id)
-    .then(() => {
+    .then(result => {
         response.status(204).end()
     })
-    .catch(error => {
-        console.error("Error deleting person:", error)
-        response.status(500).json({ error: "Internal Server Error"})
-    });
+    .catch(error => next(error));
 });
 
 app.post("/api/persons", (request, response) => {
@@ -124,6 +109,16 @@ app.post("/api/persons", (request, response) => {
 app.get("/info", (request, response) => {
     response.send(`${phoneBookLength}<br>${dateNow}`);
 });
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+    if (error.name === "CastError") {
+        return response.status(400).send({ error: "malformatted id" })
+    }
+    next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {
