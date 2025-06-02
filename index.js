@@ -14,30 +14,6 @@ app.use(morgan(":method :url: :status :res[content-length] - :response-time ms :
 
 app.use(express.static('dist'))
 
-let phoneBook = [
-    { 
-        id: "1", 
-        name: 'Arto Hellas', 
-        number: '040-123456' 
-    },
-    { 
-        id: "2", 
-        name: 'Ada Lovelace', 
-        number: '39-44-5323523' 
-    },
-    { 
-        id: "3", 
-        name: 'Dan Abramov', 
-        number: '12-43-234345' 
-    },
-    { 
-        id: "4", 
-        name: 'Mary Poppendieck', 
-        number: '39-23-6423122' 
-    }
-]
-
-let phoneBookLength = `Phonebook has info for ${phoneBook.length} people`
 let options = { 
   timeZone: "Europe/Helsinki", 
   weekday: "short", 
@@ -106,8 +82,33 @@ app.post("/api/persons", (request, response) => {
     })
 })
 
+app.put("/api/persons/:id", (request, response, next) => {
+    const { name, number } = request.body;
+    Phonebook.findByIdAndUpdate(
+        request.params.id,
+        {name, number },
+        {new: true, runValidators: true, context: "query"}
+    )
+    .then(updatedPerson => {
+        if (updatedPerson) {
+            response.json(updatedPerson)
+        } else {
+            response.status(404).json({ error: "Person not found" });
+        }
+    })
+    .catch(error => next(error))
+});
+
 app.get("/info", (request, response) => {
-    response.send(`${phoneBookLength}<br>${dateNow}`);
+    Phonebook.countDocuments({})
+    .then(count => {
+        let phoneBookLength = `Phonebook has info for ${count} people`
+        response.send(`${phoneBookLength}<br>${dateNow}`);
+    })
+    .catch(error => {
+        console.error("Error counting persons:", error)
+        response.status(500).send("Error retrieving phonebook data")
+    });
 });
 
 const errorHandler = (error, request, response, next) => {
